@@ -1,0 +1,70 @@
+1) things added in c++14
+	a) generic lambdas:
+		-> c++11 lambdas 
+			[](int a, int b) -> int { return a + b; }
+		-> c++14 lambdas 
+			template<typename T>
+				[](T a, T b) -> T { return a + b };
+	
+
+	b) Return Type Deduction for Functions: 
+		-> C++14 extended the auto type deduction to work with the return types of functions.
+		-> auto func() {
+						return 42; // deduces return type as int
+					}
+	
+	c) enhancements in multithreading
+		-> std::shared_timed_mutex introduced 
+
+/////////////////////////////////////////////////////////////////////
+
+###################################################################################################################
+LAMBDA FUNCTION/EXPRESSIONS IN C++
+###################################################################################################################
+
+1) fucntions without name hence non reusable
+2) kind of inline functions
+3) possible syntax
+	1)[]()->return_t{}();   
+	2)"->return_t" part can be ignored as compiler impicitly can decide the return type, but for few cases,
+		it should be written explicitly
+		[capture clause](parameters){fucntion body}; // ";" is just like semicolon at the end of calling any function with name
+		
+	3) Examples:
+	  a)
+		int main()
+		{
+			int a=4, b=5;
+			[](int a, int b)->void{std::cout<<a<<" "<<b;}(a,b);
+			
+		}
+	  b)
+		int main()
+		{
+			int a=4, b=5;
+			[=]()->void{std::cout<<a<<" "<<b;}();
+			// here "equal in capture clause tells that this function have copies of all the variables of parent funtion (main)"
+			// immutable lambda function
+			
+		}
+	  c) 
+	    int main()
+		{
+			int a=4, b=5;
+			[&]()->void{std::cout<<a<<" "<<b;}();
+			// here "& in capture clause tells that this function have refrence of all the variables of parent funtion (main)"
+			//mutable lambda function
+			
+		}
+	  d) 
+	    int main()
+		{
+			int a=4, b=5;
+			[]()->void{std::cout<<a<<" "<<b;}();
+			// this code will throw error as lambda function dont have access to parent function's variable implicitly
+			
+			
+		}
+
+
+###################################################################################################################
