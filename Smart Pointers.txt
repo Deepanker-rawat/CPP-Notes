@@ -1,0 +1,308 @@
+- A smart pointer is a class that wraps a raw pointer and automatically manages the lifetime of dynamically allocated memory.
+
+- It ensures proper resource deallocation by automatically releasing the memory when the pointer goes out of scope, thus preventing memory leaks and dangling pointers.
+- Smart pointers are defined in the <memory> header and include types such as std::unique_ptr, std::shared_ptr, and std::weak_ptr.
+
+###################################################################################################################
+SMART POINTERS IN C++
+###################################################################################################################
+
+Introduction
+a) Smart pointers are wrapper classes around raw pointers
+-> They automatically manage the lifetime of dynamically allocated memory
+-> Based on RAII (Resource Acquisition Is Initialization)
+
+b) Why smart pointers are required
+-> Prevent memory leaks
+-> Prevent dangling pointers
+-> Exception safety
+-> Clear ownership semantics
+-> Avoid manual new/delete
+
+c) Header file
+-> #include <memory>
+
+d) Types of smart pointers
+-> unique_ptr
+-> shared_ptr
+-> weak_ptr
+-> auto_ptr (deprecated, removed in C++17)
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+Raw Pointer vs Smart Pointer
+a) Raw pointer problems
+-> No ownership information
+-> Manual delete required
+-> Easy to leak memory
+-> Unsafe during exceptions
+
+b) Smart pointer advantages
+-> Automatic destruction
+-> Ownership is explicit
+-> Exception-safe
+-> RAII based
+
+c) Rule of thumb
+-> Use raw pointers only for non-owning references
+-> Prefer smart pointers in application-level code
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+unique_ptr
+a) Definition
+-> unique_ptr represents exclusive ownership of an object
+-> Only one unique_ptr can own an object at a time
+
+b) Key characteristics
+-> Not copyable
+-> Movable
+-> No reference counting
+-> Very lightweight and fast
+
+c) Basic syntax
+-> std::unique_ptr<int> p = std::make_unique<int>(10);
+
+d) Ownership rules
+-> Copy constructor = deleted
+-> Copy assignment = deleted
+-> Move constructor = allowed
+-> Move assignment = allowed
+
+e) Ownership transfer
+-> std::unique_ptr<int> p2 = std::move(p1);
+-> After move, p1 becomes nullptr
+
+f) Returning unique_ptr from function
+-> Safe and recommended
+-> Move semantics are applied automatically
+
+g) Custom deleter
+-> std::unique_ptr<FILE, decltype(&fclose)> fp(fopen("a.txt","r"), fclose);
+
+h) Managing arrays
+-> std::unique_ptr<int[]> arr = std::make_unique<int[]>(10);
+
+i) Use cases
+-> Default smart pointer choice
+-> Factory functions
+-> Resource management
+-> Clear ownership transfer
+
+j) Interview questions
+-> Why prefer unique_ptr over shared_ptr?
+-> Faster and no reference counting
+-> Can unique_ptr be passed to a function?
+-> Yes, by reference or by move
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+shared_ptr
+a) Definition
+-> shared_ptr allows multiple owners for the same object
+-> Ownership is shared using reference counting
+
+b) Key characteristics
+-> Copyable and assignable
+-> Uses reference counting
+-> Slight performance overhead
+-> Reference counting is thread-safe
+
+c) Basic syntax
+-> std::shared_ptr<int> sp = std::make_shared<int>(20);
+
+d) Reference counting behavior
+-> Copy increases count
+-> Destruction decreases count
+-> Object deleted when count reaches zero
+
+e) Example
+-> std::shared_ptr<int> p1 = std::make_shared<int>(10);
+-> std::shared_ptr<int> p2 = p1;
+-> Reference count = 2
+
+f) Control block
+-> Strong reference count
+-> Weak reference count
+-> Custom deleter
+-> Allocator info
+
+g) make_shared vs shared_ptr(new)
+-> make_shared
+-> Single allocation
+-> Better cache locality
+-> Faster and exception-safe
+-> shared_ptr(new)
+-> Two allocations
+-> Less efficient
+
+h) Custom deleter
+-> std::shared_ptr<int> sp(new int(5), [](int* p){ delete p; });
+
+i) Use cases
+-> Shared ownership
+-> Graph data structures
+-> Observer pattern
+-> Caching systems
+
+j) Interview questions
+-> Is shared_ptr thread-safe?
+-> Reference counting yes, object access no
+-> When should shared_ptr be avoided?
+-> When ownership is clear or performance is critical
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+weak_ptr
+a) Definition
+-> weak_ptr is a non-owning smart pointer
+-> Observes an object managed by shared_ptr
+
+b) Why weak_ptr is required
+-> Prevent cyclic dependency memory leaks
+-> Safe observation without affecting lifetime
+
+c) Key characteristics
+-> Does not increase reference count
+-> Cannot directly access object
+-> Uses lock() to obtain shared_ptr
+
+d) Example
+-> std::shared_ptr<int> sp = std::make_shared<int>(10);
+-> std::weak_ptr<int> wp = sp;
+
+e) Safe access
+-> if(auto s = wp.lock()) { /* safe access */ }
+
+f) expired()
+-> Returns true if object is destroyed
+
+g) Cyclic dependency problem
+-> class A { shared_ptr<B> b; };
+-> class B { shared_ptr<A> a; };
+-> Memory leak occurs
+
+h) Solution
+-> Replace one shared_ptr with weak_ptr
+
+i) Interview questions
+-> Does weak_ptr affect object lifetime?
+-> No
+-> Can weak_ptr delete object?
+-> No
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+auto_ptr (Deprecated)
+a) Status
+-> Deprecated in C++11
+-> Removed in C++17
+
+b) Problems
+-> Copy transfers ownership
+-> Breaks copy semantics
+-> Unsafe with STL containers
+
+c) Conclusion
+-> Never use auto_ptr in modern C++
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+make_unique vs make_shared
+a) make_unique
+-> Safer
+-> No control block
+-> Preferred by default
+
+b) make_shared
+-> Single allocation for object + control block
+-> Better performance
+-> Memory may live longer with weak_ptr
+
+c) Interview question
+-> Why was make_unique introduced?
+-> To safely replace auto_ptr
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+Performance Comparison
+a) unique_ptr
+-> Fastest
+-> Minimal overhead
+
+b) shared_ptr
+-> Slower due to atomic ref counting
+-> More memory usage
+
+c) weak_ptr
+-> Very low overhead
+-> Depends on shared_ptr
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+Exception Safety
+a) Smart pointers are exception-safe
+-> Memory is released automatically
+
+b) Example
+-> auto p = std::make_unique<int>(10);
+-> throw exception(); // no leak
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+Smart Pointers in STL Containers
+a) Allowed
+-> vector<unique_ptr<T>>
+-> vector<shared_ptr<T>>
+
+b) Important note
+-> unique_ptr must be moved into containers
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+Common Interview Pitfalls
+a) Using shared_ptr everywhere
+b) Creating multiple shared_ptr from same raw pointer
+c) Forgetting to break cyclic dependencies
+d) Passing shared_ptr by value unnecessarily
+e) Mixing raw delete with smart pointers
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+Passing Smart Pointers to Functions
+a) unique_ptr
+-> Pass by reference for observation
+-> Pass by move for ownership transfer
+
+b) shared_ptr
+-> Pass by const reference to observe
+-> Pass by value to share ownership
+
+c) weak_ptr
+-> Pass by value (cheap)
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+Best Practices
+a) Prefer unique_ptr by default
+b) Use shared_ptr only when required
+c) Use weak_ptr to break cycles
+d) Avoid manual new/delete
+e) Use make_unique and make_shared
+f) Never create shared_ptr from stack memory
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+Quick Interview One-Liners
+a) unique_ptr = exclusive ownership
+b) shared_ptr = shared ownership with ref counting
+c) weak_ptr = non-owning observer
+d) make_shared uses single allocation
+e) weak_ptr prevents cyclic memory leaks
+f) Smart pointers implement RAII
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+// END OF FILE
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
